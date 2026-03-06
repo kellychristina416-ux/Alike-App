@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Alike - Personal AI Assistant</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+        body{background:#0a0a0a;color:#fff;min-height:100vh;overflow-x:hidden}
+        .auth{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem;background:radial-gradient(circle at 50% 0%,rgba(0,212,255,0.15) 0%,transparent 50%)}
+        .logo{text-align:center;margin-bottom:3rem}
+        .logo svg{width:100px;height:100px;margin-bottom:1rem;animation:float 6s ease-in-out infinite}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .logo h1{font-size:3rem;background:linear-gradient(135deg,#00d4ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+        .logo p{color:#888;margin-top:0.5rem}
+        .card{background:#1c1c1c;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+        .tabs{display:flex;background:rgba(0,0,0,0.3);border-radius:12px;padding:4px;margin-bottom:2rem}
+        .tab{flex:1;padding:0.75rem;border:none;background:transparent;color:#888;font-weight:600;border-radius:8px;cursor:pointer;transition:all 0.3s}
+        .tab.active{background:rgba(0,212,255,0.2);color:#00d4ff}
+        .input-group{margin-bottom:1.5rem}
+        .input-group label{display:block;color:#888;font-size:0.85rem;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em}
+        .input-group input{width:100%;padding:1rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:1rem;transition:all 0.3s}
+        .input-group input:focus{outline:none;border-color:#00d4ff;background:rgba(0,212,255,0.05)}
+        .btn-primary{width:100%;padding:1rem;background:linear-gradient(135deg,#00d4ff,#0099cc);color:#000;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.3s;margin-top:0.5rem}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,212,255,0.3)}
+        .app{display:none;min-height:100vh;padding-bottom:80px}
+        .header{position:sticky;top:0;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);z-index:100}
+        .user-info{display:flex;align-items:center;gap:1rem}
+        .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#00d4ff,#00ff88);display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:1.2rem}
+        .greeting h2{font-size:1.2rem;font-weight:600}
+        .greeting p{color:#888;font-size:0.85rem}
+        .menu-btn{background:none;border:none;color:#888;cursor:pointer;padding:0.5rem;font-size:1.5rem}
+        .content{padding:1.5rem;max-width:800px;margin:0 auto}
+        .stat-card{background:#1c1c1c;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.25rem;text-align:center}
+        .stat-card h3{color:#00d4ff;font-size:2rem;font-weight:700;margin-bottom:0.25rem}
+        .stat-card p{color:#888;font-size:0.9rem}
+        .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;margin-top:1.5rem}
+        .section-header h3{font-size:1.25rem;font-weight:600}
+        .view-all{color:#00d4ff;text-decoration:none;font-size:0.9rem;font-weight:500}
+        .task-item{display:flex;align-items:center;gap:1rem;padding:1rem;background:rgba(255,255,255,0.03);border-radius:12px;margin-bottom:0.75rem;border-left:3px solid transparent;transition:all 0.3s;cursor:pointer}
+        .task-item:hover{background:rgba(255,255,255,0.06)}
+        .task-item.high{border-left-color:#ff4444}
+        .task-item.medium{border-left-color:#ffaa00}
+        .task-item.low{border-left-color:#00ff88}
+        .checkbox{width:24px;height:24px;border:2px solid rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.3s}
+        .checkbox.checked{background:#00ff88;border-color:#00ff88;color:#000;font-weight:700}
+        .task-content{flex:1}
+        .task-content h4{font-weight:500;margin-bottom:0.25rem}
+        .task-content.completed h4{text-decoration:line-through;opacity:0.5}
+        .task-meta{display:flex;gap:0.75rem;font-size:0.8rem;color:#888}
+        .priority-badge{padding:0.2rem 0.6rem;border-radius:20px;font-size:0.75rem;font-weight:600;text-transform:uppercase}
+        .high .priority-badge{background:rgba(255,68,68,0.2);color:#ff4444}
+        .medium .priority-badge{background:rgba(255,170,0,0.2);color:#ffaa00}
+        .low .priority-badge{background:rgba(0,255,136,0.2);color:#00ff88}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,15,0.98);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-around;padding:0.75rem 0;z-index:1000}
+        .nav-item{display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.5rem 1.5rem;color:#888;text-decoration:none;font-size:0.75rem;transition:all 0.3s;border:none;background:none;cursor:pointer}
+        .nav-item.active{color:#00d4ff}
+        .nav-item svg{width:24px;height:24px}
+        .fab{position:fixed;bottom:90px;right:20px;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#00d4ff,#00b4d8);color:#000;border:none;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;transition:all 0.3s;z-index:999;box-shadow:0 4px 20px rgba(0,212,255,0.4)}
+        .fab:hover{transform:scale(1.1)}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(10px);display:none;align-items:flex-end;justify-content:center;z-index:2000;opacity:0;transition:opacity 0.3s}
+        .modal-overlay.active{display:flex;opacity:1}
+        .modal{background:#1c1c1c;width:100%;max-width:500px;border-radius:24px 24px 0 0;padding:1.5rem;transform:translateY(100%);transition:transform 0.3s}
+        .modal-overlay.active .modal{transform:translateY(0)}
+        .modal-handle{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 1.5rem}
+        .modal h3{font-size:1.5rem;margin-bottom:1.5rem}
+        .priority-select{display:flex;gap:0.75rem;margin-bottom:1.5rem}
+        .priority-btn{flex:1;padding:0.75rem;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#fff;border-radius:10px;cursor:pointer;transition:all 0.3s}
+        .priority-btn.active{border-color:#00d4ff;background:rgba(0,212,255,0.1)}
+        .priority-btn.high.active{border-color:#ff4444;background:rgba(255,68,68,0.1);color:#ff4444}
+        .priority-btn.medium.active{border-color:#ffaa00;background:rgba(255,170,0,0.1);color:#ffaa00}
+        .priority-btn.low.active{border-color:#00ff88;background:rgba(0,255,136,0.1);color:#00ff88}
+        .empty-state{text-align:center;padding:3rem 1rem;color:#888}
+        .empty-state svg{width:64px;height:64px;margin-bottom:1rem;opacity:0.3}
+        .menu-item{display:flex;align-items:center;gap:1rem;padding:1rem;color:#fff;text-decoration:none;border-radius:12px;transition:all 0.3s}
+        .menu-item:hover{background:rgba(255,255,255,0.05)}
+        .menu-item.danger{color:#ff4444}
+        .menu-divider{height:1px;background:rgba(255,255,255,0.1);margin:0.5rem 0}
+        .progress-container{margin-top:1rem}
+        .progress-header{display:flex;justify-content:space-between;margin-bottom:0.5rem;font-size:0.9rem}
+        .progress-bar{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden}
+        .progress-fill{height:100%;background:linear-gradient(90deg,#00d4ff,#00ff88);border-radius:4px;transition:width 0.5s ease}
+        .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:#1c1c1c;color:#fff;padding:1rem 1.5rem;border-radius:12px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 10px 40px rgba(0,0,0,0.5);z-index:3000;opacity:0;transition:all 0.3s}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .toast.success{border-color:#00ff88;color:#00ff88}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+        .view{display:none}
+        .view.active{display:block}
+        ::-webkit-scrollbar{width:8px}
+        ::-webkit-scrollbar-track{background:#0a0a0a}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth">
+        <div class="logo">
+            <svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="45" stroke="url(#g1)" stroke-width="2" opacity="0.3" stroke-dasharray="4 4"><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="20s" repeatCount="indefinite"/></circle><path d="M50 20L75 75H25Z" stroke="url(#g1)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="45" r="5" fill="#00d4ff"/><circle cx="37" cy="65" r="4" fill="#00ff88"/><circle cx="63" cy="65" r="4" fill="#00d4ff"/><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#00ff88"/></linearGradient></defs></svg>
+            <h1>Alike</h1>
+            <p>Personal Sovereignty Technology</p>
+        </div>
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchAuth('login')">Sign In</button>
+                <button class="tab" onclick="switchAuth('register')">Create Account</button>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="input-group"><label>Email</label><input type="email" id="login-email" required placeholder="you@example.com"></div>
+                <div class="input-group"><label>Password</label><input type="password" id="login-password" required placeholder="••••••••"></div>
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+            <form id="register-form" style="display:none" onsubmit="handleRegister(event)">
+                <div class="input-group"><label>Full Name</label><input type="text" id="reg-name" required placeholder="John Doe"></div>
+                <div class="input-group"><label>Email</label><input type="email" id="reg-email" required placeholder="you@example.com"></div>
+                <div class="input-group"><label>Password</label><input type="password" id="reg-password" required minlength="6" placeholder="Min 6 characters"></div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+        </div>
+        <p style="color:#888;font-size:0.8rem;margin-top:2rem;text-align:center">By using Alike, you agree to our Privacy First policy.<br>Your data is stored locally and never sold.</p>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" class="app">
+        <header class="header">
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">U</div>
+                <div class="greeting"><p id="greeting-text">Good morning</p><h2 id="user-name">User</h2></div>
+            </div>
+            <button class="menu-btn" onclick="openMenu()">⋮</button>
+        </header>
+
+        <main class="content">
+            <!-- Dashboard -->
+            <div id="view-dashboard" class="view active">
+                <div style="background:linear-gradient(135deg,rgba(0,212,255,0.1),transparent);padding:1.5rem;border-radius:20px;margin-bottom:1.5rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div><p style="color:#888;font-size:0.9rem">Daily Focus</p><h2 style="font-size:2.5rem;background:linear-gradient(135deg,#00d4ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="focus-score">0%</h2></div>
+                        <div style="width:60px;height:60px;position:relative"><svg width="60" height="60" style="transform:rotate(-90deg)"><circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/><circle cx="30" cy="30" r="26" fill="none" stroke="url(#g2)" stroke-width="4" stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round" id="focus-circle"><animate attributeName="stroke-dashoffset" dur="1s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1"/></circle><defs><linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#00ff88"/></linearGradient></defs></svg><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">⚡</div></div>
+                    </div>
+                    <div class="progress-bar" style="height:6px;margin:1rem 0"><div class="progress-fill" id="focus-bar" style="width:0%"></div></div>
+                    <p style="color:#888;font-size:0.9rem" id="focus-message">Start your day! Add some tasks.</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card"><h3 id="stat-tasks">0/0</h3><p>Tasks Done</p></div>
+                    <div class="stat-card"><h3 id="stat-goals">0</h3><p>Active Goals</p></div>
+                </div>
+
+                <div class="section-header"><h3>Priority Tasks</h3><a href="#" class="view-all" onclick="switchView('tasks')">View all</a></div>
+                <div id="dashboard-tasks"></div>
+            </div>
+
+            <!-- Tasks -->
+            <div id="view-tasks" class="view">
+                <div class="section-header"><h3>All Tasks</h3></div>
+                <div style="display:flex;gap:0.5rem;margin-bottom:1rem;overflow-x:auto">
+                    <button class="priority-btn active" onclick="filterTasks('all')">All</button>
+                    <button class="priority-btn" onclick="filterTasks('active')">Active</button>
+                    <button class="priority-btn" onclick="filterTasks('completed')">Completed</button>
+                </div>
+                <div id="all-tasks"></div>
+            </div>
+
+            <!-- Goals -->
+            <div id="view-goals" class="view">
+                <div class="section-header"><h3>Your Goals</h3></div>
+                <div id="goals-list"></div>
+                <button class="btn-primary" onclick="openGoalModal()" style="margin-top:1rem">+ Create New Goal</button>
+            </div>
+
+            <!-- Memory -->
+            <div id="view-memory" class="view">
+                <div class="section-header"><h3>Memory Bank</h3></div>
+                <div style="background:#1c1c1c;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1rem;margin-bottom:1.5rem">
+                    <textarea id="memory-input" placeholder="What do you want to remember?" style="width:100%;background:transparent;border:none;color:#fff;resize:none;outline:none;min-height:80px"></textarea>
+                    <button class="btn-primary" onclick="saveMemory()" style="margin-top:0.5rem">Save Memory</button>
+                </div>
+                <div id="memory-list"></div>
+            </div>
+        </main>
+
+        <button class="fab" onclick="openTaskModal()">+</button>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchView('dashboard')"><span>🏠</span><span>Home</span></button>
+            <button class="nav-item" onclick="switchView('tasks')"><span>✓</span><span>Tasks</span></button>
+            <button class="nav-item" onclick="switchView('goals')"><span>◎</span><span>Goals</span></button>
+            <button class="nav-item" onclick="switchView('memory')"><span>🧠</span><span>Memory</span></button>
+        </nav>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="task-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <h3>Add New Task</h3>
+            <div class="input-group"><input type="text" id="task-title" placeholder="What needs to be done?" style="width:100%;padding:1rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:1rem"></div>
+            <div class="priority-select">
+                <button class="priority-btn high" onclick="setPriority('high')">High</button>
+                <button class="priority-btn medium active" onclick="setPriority('medium')">Medium</button>
+                <button class="priority-btn low" onclick="setPriority('low')">Low</button>
+            </div>
+            <button class="btn-primary" onclick="addTask()">Add Task</button>
+        </div>
+    </div>
+
+    <!-- Add Goal Modal -->
+    <div id="goal-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <h3>Create New Goal</h3>
+            <div class="input-group"><input type="text" id="goal-title" placeholder="Goal title" style="width:100%;padding:1rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:1rem"></div>
+            <div class="input-group"><textarea id="goal-desc" placeholder="Description (optional)" style="width:100%;padding:1rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:1rem;resize:none;min-height:80px"></textarea></div>
+            <div class="input-group"><input type="date" id="goal-date" style="width:100%;padding:1rem;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:1rem"></div>
+            <button class="btn-primary" onclick="addGoal()">Create Goal</button>
+        </div>
+    </div>
+
+    <!-- Menu Modal -->
+    <div id="menu-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div style="text-align:center;margin-bottom:2rem">
+                <div class="avatar" id="menu-avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 1rem">U</div>
+                <h3 id="menu-name">User Name</h3>
+                <p style="color:#888" id="menu-email">user@example.com</p>
+            </div>
+            <div class="menu-divider"></div>
+            <a href="#" class="menu-item danger" onclick="logout()"><span>🚪</span><span>Sign Out</span></a>
+            <div class="menu-divider"></div>
+            <p style="text-align:center;color:#888;font-size:0.8rem;margin-top:1rem">Alike v1.0.0 • ALIKEDECOR</p>
+        </div>
+    </div>
+
+    <script>
+        const Store={users:JSON.parse(localStorage.getItem('alike_u')||'[]'),tasks:JSON.parse(localStorage.getItem('alike_t')||'[]'),goals:JSON.parse(localStorage.getItem('alike_g')||'[]'),memories:JSON.parse(localStorage.getItem('alike_m')||'[]'),current:JSON.parse(localStorage.getItem('alike_c')||'null'),save(){localStorage.setItem('alike_u',JSON.stringify(this.users));localStorage.setItem('alike_t',JSON.stringify(this.tasks));localStorage.setItem('alike_g',JSON.stringify(this.goals));localStorage.setItem('alike_m',JSON.stringify(this.memories));localStorage.setItem('alike_c',JSON.stringify(this.current))},getTasks(){return this.tasks.filter(t=>t.userId===this.current?.id).sort((a,b)=>b.createdAt-a.createdAt)},getGoals(){return this.goals.filter(g=>g.userId===this.current?.id)},getMemories(){return this.memories.filter(m=>m.userId===this.current?.id).sort((a,b)=>b.createdAt-a.createdAt)}};
+        let currentPriority='medium',currentFilter='all',currentView='dashboard';
+
+        function switchAuth(tab){document.querySelectorAll('.auth .tab').forEach(t=>t.classList.remove('active'));event.target.classList.add('active');document.getElementById('login-form').style.display=tab==='login'?'block':'none';document.getElementById('register-form').style.display=tab==='register'?'block':'none'}
+        function handleLogin(e){e.preventDefault();const email=document.getElementById('login-email').value,pass=document.getElementById('login-password').value,user=Store.users.find(u=>u.email===email&&u.password===pass);if(user){Store.current=user;Store.save();showApp();showToast('Welcome back!','success')}else{showToast('Invalid credentials')}}
+        function handleRegister(e){e.preventDefault();const name=document.getElementById('reg-name').value,email=document.getElementById('reg-email').value,pass=document.getElementById('reg-password').value;if(Store.users.find(u=>u.email===email)){showToast('Email already registered');return}Store.users.push({id:Date.now(),name,email,password:pass,createdAt:Date.now()});Store.current=Store.users[Store.users.length-1];Store.save();showApp();showToast('Account created!','success')}
+        function logout(){Store.current=null;Store.save();closeAllModals();document.getElementById('app-container').style.display='none';document.getElementById('auth-screen').style.display='flex';showToast('Signed out')}
+        function showApp(){document.getElementById('auth-screen').style.display='none';document.getElementById('app-container').style.display='block';const u=Store.current;document.getElementById('user-name').textContent=u.name.split(' ')[0];document.getElementById('user-avatar').textContent=u.name[0].toUpperCase();document.getElementById('menu-name').textContent=u.name;document.getElementById('menu-email').textContent=u.email;document.getElementById('menu-avatar').textContent=u.name[0].toUpperCase();updateGreeting();refreshDashboard()}
+        function updateGreeting(){const h=new Date().getHours();document.getElementById('greeting-text').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
+        function switchView(view){currentView=view;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+view).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const navMap={'dashboard':0,'tasks':1,'goals':2,'memory':3};document.querySelectorAll('.nav-item')[navMap[view]].classList.add('active');if(view==='dashboard')refreshDashboard();if(view==='tasks')renderTasks();if(view==='goals')renderGoals();if(view==='memory')renderMemories()}
+        function refreshDashboard(){const tasks=Store.getTasks(),goals=Store.getGoals(),completed=tasks.filter(t=>t.completed).length,total=tasks.length,score=total>0?Math.round((completed/total)*100):0;document.getElementById('stat-tasks').textContent=completed+'/'+total;document.getElementById('stat-goals').textContent=goals.length;document.getElementById('focus-score').textContent=score+'%';document.getElementById('focus-bar').style.width=score+'%';document.getElementById('focus-circle')&&document.getElementById('focus-circle').setAttribute('stroke-dashoffset',163.36*(1-score/100));document.getElementById('focus-message').textContent=score===0?'Start your day! Add some tasks.':score<50?'Good start! Keep going.':score<100?'You\'re on fire! Keep it up.':'All done! Amazing!';const recent=tasks.filter(t=>!t.completed).slice(0,3),container=document.getElementById('dashboard-tasks');if(recent.length===0){container.innerHTML='<div class="empty-state"><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><path d=\\'M9 11l3 3L22 4\\'/><path d=\\'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\\'/></svg><p>No pending tasks</p><button class=\\'btn-primary\\' style=\\'margin-top:1rem\\' onclick=\\'openTaskModal()\\'>Add your first task</button></div>'}else{container.innerHTML=recent.map(t=>createTaskHTML(t)).join('')}}
+        function createTaskHTML(t){return`<div class='task-item priority-${t.priority}' onclick='toggleTask(${t.id})'><div class='checkbox ${t.completed?'checked':''}' onclick='event.stopPropagation();toggleTask(${t.id})'>${t.completed?'✓':''}</div><div class='task-content ${t.completed?'completed':''}'><h4>${escapeHtml(t.title)}</h4><div class='task-meta'><span class='priority-badge'>${t.priority}</span><span>${formatDate(t.createdAt)}</span></div></div></div>`}
+        function renderTasks(){const tasks=Store.getTasks();let filtered=tasks;if(currentFilter==='active')filtered=tasks.filter(t=>!t.completed);if(currentFilter==='completed')filtered=tasks.filter(t=>t.completed);const container=document.getElementById('all-tasks');if(filtered.length===0){container.innerHTML='<div class=\'empty-state\'><p>No '+currentFilter+' tasks found</p></div>'}else{container.innerHTML=filtered.map(t=>createTaskHTML(t)).join('')}}
+        function filterTasks(filter){currentFilter=filter;document.querySelectorAll('#view-tasks .priority-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');renderTasks()}
+        function toggleTask(id){const t=Store.tasks.find(x=>x.id===id);if(t){t.completed=!t.completed;Store.save();refreshDashboard();renderTasks();showToast(t.completed?'Task completed!':'Task reopened','success')}}
+        function openTaskModal(){document.getElementById('task-modal').classList.add('active');document.getElementById('task-title').focus()}
+        function openGoalModal(){document.getElementById('goal-modal').classList.add('active')}
+        function setPriority(p){currentPriority=p;document.querySelectorAll('#task-modal .priority-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active')}
+        function addTask(){const title=document.getElementById('task-title').value.trim();if(!title)return;Store.tasks.push({id:Date.now(),userId:Store.current.id,title,priority:currentPriority,completed:false,createdAt:Date.now()});Store.save();document.getElementById('task-title').value='';closeAllModals();refreshDashboard();showToast('Task added!','success')}
+        function renderGoals(){const goals=Store.getGoals(),container=document.getElementById('goals-list');if(goals.length===0){container.innerHTML='<div class=\'empty-state\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><circle cx=\\'12\\' cy=\\'12\\' r=\\'10\\'/><circle cx=\\'12\\' cy=\\'12\\' r=\\'6\\'/><circle cx=\\'12\\' cy=\\'12\\' r=\\'2\\'/></svg><p>No goals yet. Create your first goal!</p></div>';return}container.innerHTML=goals.map(g=>`<div style='background:#1c1c1c;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.5rem;margin-bottom:1rem'><div style='display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem'><div><h4 style='font-size:1.1rem;margin-bottom:0.5rem'>${escapeHtml(g.title)}</h4>${g.description?`<p style='color:#888;font-size:0.9rem'>${escapeHtml(g.description)}</p>`:''}${g.targetDate?`<p style='color:#00d4ff;font-size:0.85rem;margin-top:0.5rem'>Target: ${formatDate(g.targetDate)}</p>`:''}</div><button onclick='deleteGoal(${g.id})' style='background:none;border:none;color:#ff4444;cursor:pointer;font-size:1.2rem'>×</button></div><div class='progress-container'><div class='progress-header'><span style='color:#888'>Progress</span><span style='color:#00d4ff;font-weight:700'>${g.progress}%</span></div><div class='progress-bar'><div class='progress-fill' style='width:${g.progress}%'></div></div><input type='range' min='0' max='100' value='${g.progress}' oninput='updateGoalProgress(${g.id},this.value)' style='width:100%;margin-top:1rem;accent-color:#00d4ff'></div></div>`).join('')}
+        function addGoal(){const title=document.getElementById('goal-title').value.trim();if(!title)return;Store.goals.push({id:Date.now(),userId:Store.current.id,title,description:document.getElementById('goal-desc').value,targetDate:document.getElementById('goal-date').value,progress:0,createdAt:Date.now()});Store.save();document.getElementById('goal-title').value='';document.getElementById('goal-desc').value='';document.getElementById('goal-date').value='';closeAllModals();renderGoals();refreshDashboard();showToast('Goal created!','success')}
+        function updateGoalProgress(id,val){const g=Store.goals.find(x=>x.id===id);if(g){g.progress=parseInt(val);Store.save();renderGoals();refreshDashboard();if(val==100)showToast('Goal completed! 🎉','success')}}
+        function deleteGoal(id){if(confirm('Delete this goal?')){Store.goals=Store.goals.filter(g=>g.id!==id);Store.save();renderGoals();showToast('Goal deleted')}}
+        function renderMemories(){const memories=Store.getMemories(),container=document.getElementById('memory-list');if(memories.length===0){container.innerHTML='<div class=\'empty-state\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><path d=\\'M12 2a10 10 0 1 0 10 10H12V2z\\'/><path d=\\'M12 2a10 10 0 0 1 10 10\\'/><path d=\\'M12 12L2.5 12\\'/></svg><p>Your memory bank is empty</p></div>';return}container.innerHTML=memories.map(m=>`<div style='background:#1c1c1c;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.5rem;margin-bottom:1rem'><p style='margin-bottom:1rem;line-height:1.6'>${escapeHtml(m.content)}</p><div style='display:flex;justify-content:space-between;align-items:center'><span style='color:#888;font-size:0.85rem'>${formatDateTime(m.createdAt)}</span><button onclick='deleteMemory(${m.id})' style='background:none;border:none;color:#ff4444;cursor:pointer'>🗑</button></div></div>`).join('')}
+        function saveMemory(){const content=document.getElementById('memory-input').value.trim();if(!content)return;Store.memories.push({id:Date.now(),userId:Store.current.id,content,createdAt:Date.now()});Store.save();document.getElementById('memory-input').value='';renderMemories();showToast('Saved to memory!','success')}
+        function deleteMemory(id){Store.memories=Store.memories.filter(m=>m.id!==id);Store.save();renderMemories();showToast('Memory deleted')}
+        function openMenu(){document.getElementById('menu-modal').classList.add('active')}
+        function closeModal(e){if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('active')}
+        function closeAllModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'))}
+        function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+        function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+        function formatDate(d){return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+        function formatDateTime(d){return new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+        if(Store.current)showApp();
+    </script>
+</body>
+</html>
